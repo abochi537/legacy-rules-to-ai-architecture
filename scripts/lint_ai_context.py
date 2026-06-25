@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Lint AGENTS.md and AI context docs for obvious unfinished placeholders."""
+"""Lint AGENTS.md and AI context docs for obvious unfinished placeholders.
+
+The linter is intentionally scoped to starter-template residue. Project context
+docs often contain Markdown autolinks, HTML/XML fragments, and domain words such
+as "Todo"; those are valid evidence and must not be treated as unfinished work.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +13,25 @@ import re
 from pathlib import Path
 
 
-ANGLE_PLACEHOLDER_RE = re.compile(r"<[^>\n]+>")
-TEXT_PLACEHOLDER_RE = re.compile(r"\b(?:TBD|TODO)\b", re.IGNORECASE)
+ANGLE_TOKEN_RE = re.compile(r"<[^>\n]+>")
+TODO_MARKER_RE = re.compile(r"(?<![\w-])(?:TODO|TBD)(?=\s*(?:[:\-]|$))", re.IGNORECASE)
+TAG_NAME_RE = re.compile(r"^<([A-Za-z][\w:-]*)>$")
+KNOWN_ANGLE_PLACEHOLDERS = frozenset(
+    {
+        "<project-name>",
+        "<one-paragraph product purpose>",
+        "<legacy extraction | migration | rebuild | maintenance>",
+        "<brief target>",
+        "<command or TBD>",
+        "<workspace/package/module notes>",
+        "<What the system does and for whom.>",
+        "<Things the rebuild must not attempt yet.>",
+        "<README, product docs, routes, tests, demos, or user notes.>",
+        "<title>",
+        "<What the current AI/developer session is trying to complete.>",
+        "<One concrete next step.>",
+    }
+)
 REQUIRED_DOCS = (
     "00-index.md",
     "project-brief.md",
@@ -43,14 +65,32 @@ def line_count(path: Path) -> int:
         return 0
 
 
-def strip_inline_code(text: str) -> str:
-    """Ignore placeholders inside backticks, such as `<type>/vX.Y.Z/<description>`."""
-    return re.sub(r"`[^`\n]*`", "", text)
+def strip_markdown_code(text: str) -> str:
+    """Ignore placeholders inside fenced and inline code examples."""
+    without_fences = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    return re.sub(r"`[^`\n]*`", "", without_fences)
+
+
+def is_balanced_xml_tag(line: str, token: str, end: int) -> bool:
+    """Return true when `<name>` is evidence markup rather than a placeholder."""
+    match = TAG_NAME_RE.match(token)
+    if not match:
+        return False
+    return f"</{match.group(1)}>" in line[end:]
 
 
 def has_unfinished_placeholder(text: str) -> bool:
-    searchable = strip_inline_code(text)
-    return bool(ANGLE_PLACEHOLDER_RE.search(searchable) or TEXT_PLACEHOLDER_RE.search(searchable))
+    searchable = strip_markdown_code(text)
+    has_known_angle_placeholder = False
+    for line in searchable.splitlines():
+        for match in ANGLE_TOKEN_RE.finditer(line):
+            token = match.group(0)
+            if token in KNOWN_ANGLE_PLACEHOLDERS and not is_balanced_xml_tag(line, token, match.end()):
+                has_known_angle_placeholder = True
+                break
+        if has_known_angle_placeholder:
+            break
+    return bool(has_known_angle_placeholder or TODO_MARKER_RE.search(searchable))
 
 
 def main() -> int:

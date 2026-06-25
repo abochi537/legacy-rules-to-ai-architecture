@@ -48,16 +48,22 @@ docs/ai/decisions.md
 npx skills add abochi537/legacy-rules-to-ai-architecture -g -a cursor -a claude-code -a codex -y
 ```
 
-或下载压缩包后解压到 Codex skills 目录：
+或下载 release / 本地分享的压缩包后解压到 Codex skills 目录：
 
 ```powershell
 Expand-Archive legacy-rules-to-ai-architecture.zip -DestinationPath $env:USERPROFILE\.codex\skills -Force
 ```
 
+源码仓库不依赖手工维护的 zip。维护者需要分享压缩包时，应从源码重新生成：
+
+```bash
+python scripts/package_skill.py --output dist/legacy-rules-to-ai-architecture.zip
+```
+
 安装后新开 AI 会话，直接描述目标即可，不需要手动执行脚本：
 
 ```text
-使用 legacy-rules-to-ai-architecture 分析这个旧项目，先生成 core AI 上下文，然后按页面和 API 分批抽取规则。
+使用 legacy-rules-to-ai-architecture 分析这个旧项目，自动初始化 AI 上下文，然后按页面和 API 分批抽取规则。
 ```
 
 Agent 在 skill 触发后会默认自己完成这些动作：
@@ -72,7 +78,7 @@ Agent 在 skill 触发后会默认自己完成这些动作：
 
 ```text
 使用 legacy-rules-to-ai-architecture 初始化当前项目的 AI 长期上下文。
-请自动生成 core profile，然后按模块分批抽取旧系统规则、架构约束、API 契约和前端一致性规则。
+请自动选择合适的 profile，然后按模块分批抽取旧系统规则、架构约束、API 契约和前端一致性规则。
 最后自动运行上下文检查，并告诉我哪些地方还缺证据。
 ```
 
@@ -88,7 +94,7 @@ Agent 在 skill 触发后会默认自己完成这些动作：
 
 正常情况下用户不需要执行下面命令。只有当 AI 客户端没有终端权限、Python 不可用、文件系统受限，或你想手动排查时，才需要直接运行脚本。
 
-在目标项目中创建默认 `core` 上下文：
+在目标项目中创建轻量 `core` 上下文：
 
 ```bash
 python <skill-dir>/scripts/scaffold_ai_context.py --project <project-root>
@@ -117,6 +123,17 @@ python <skill-dir>/scripts/lint_ai_context.py --project <project-root>
 ```bash
 python <skill-dir>/scripts/lint_ai_context.py --project <project-root> --profile full
 ```
+
+## 发布检查
+
+发布或分享前运行：
+
+```bash
+python -m unittest discover -s tests
+python scripts/package_skill.py --output dist/legacy-rules-to-ai-architecture.zip
+```
+
+`package_skill.py` 会只打包正式安装文件，并校验压缩包中不包含 `.git`、`__pycache__`、`.pyc` 或临时目录。
 
 ## Git 规范集成
 

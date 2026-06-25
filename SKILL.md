@@ -52,9 +52,9 @@ terminal access, filesystem permissions, or an explicit read-only request.
    preferred skills directory. Default AI docs to `docs/ai`. If the user does
    not want skills inside the repo, use their global or shared path.
 2. Run the scaffold script yourself to create the starter durable context
-   without overwriting existing files. Use `core` by default; use `full` when
-   the user explicitly asks for a migration/rebuild context or broad rule
-   extraction.
+   without overwriting existing files. Use `core` only for lightweight project
+   initialization. Use `full` for legacy extraction, rebuild/migration planning,
+   API rule extraction, frontend consistency work, or broad rule recovery.
 3. Inspect the repository structure narrowly before reading deeply. Prefer
    CodeGraph if indexed; otherwise use fast file search and framework-specific
    entry points.
@@ -100,6 +100,9 @@ and `<ai-docs-dir>/active-context.md`. For frontend work, also read
 `frontend-guidelines.md`; for API/backend work, read `api-contracts.md`; for
 migration work, read `migration-map.md` and `domain-rules.md`.
 
+If a task-specific doc is missing, do not fall back to ad hoc memory. Run the
+scaffold script with `--profile full` to create the missing docs, then continue.
+
 At the end of a multi-turn task, update `active-context.md` with the current
 goal, recent decisions, open questions, and next safe step. If a rule changed,
 update the owning doc and record weak or stale areas in `context-health.md`.
@@ -118,8 +121,9 @@ python <skill-dir>/scripts/scaffold_ai_context.py --project <project-root>
 ```
 
 This default `core` profile creates only `AGENTS.md`, `00-index.md`,
-`tech-baseline.md`, `architecture.md`, `active-context.md`, and
-`context-health.md`. For a full migration/rebuild context, use:
+`tech-baseline.md`, `architecture.md`, `git-workflow.md`, `active-context.md`,
+and `context-health.md`. For legacy extraction, frontend/API rule recovery, or a
+full migration/rebuild context, use:
 
 ```bash
 python <skill-dir>/scripts/scaffold_ai_context.py --project <project-root> --profile full
@@ -190,3 +194,13 @@ so domain, API, frontend, migration, and decision docs are also checked.
 
 Then run the project's discovered quality gates, at minimum typecheck or tests
 when available.
+
+When preparing this skill for sharing, run:
+
+```bash
+python -m unittest discover -s tests
+python scripts/package_skill.py --output dist/legacy-rules-to-ai-architecture.zip
+```
+
+Do not hand-zip the repository. The package script is the source of truth for
+which files belong in the installable skill artifact.
