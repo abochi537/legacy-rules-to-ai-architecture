@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legacy Rules To AI Architecture"
+  short_description: "Extract legacy rules and create durable AI project context."
+  default_prompt: "Analyze this codebase in bounded slices. Create missing AGENTS.md and AI context docs, extract evidence-backed rules, separate canonical from deprecated patterns, and propose checks that prevent architecture or frontend drift."
