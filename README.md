@@ -54,13 +54,39 @@ npx skills add abochi537/legacy-rules-to-ai-architecture -g -a cursor -a claude-
 Expand-Archive legacy-rules-to-ai-architecture.zip -DestinationPath $env:USERPROFILE\.codex\skills -Force
 ```
 
-安装后新开 AI 会话，描述类似任务：
+安装后新开 AI 会话，直接描述目标即可，不需要手动执行脚本：
 
 ```text
 使用 legacy-rules-to-ai-architecture 分析这个旧项目，先生成 core AI 上下文，然后按页面和 API 分批抽取规则。
 ```
 
-## 使用
+Agent 在 skill 触发后会默认自己完成这些动作：
+
+- 识别目标项目根目录。
+- 运行 scaffold 脚本创建 `AGENTS.md` 和 `docs/ai/*`，但不覆盖已有文件。
+- 分批抽取旧系统规则、架构约束、API 契约和前端一致性规则。
+- 运行 lint 脚本检查缺文件、占位符和 `AGENTS.md` 长度。
+- 汇报哪些内容已创建、哪些仍缺证据、哪些规则需要人工确认。
+
+## 推荐话术
+
+```text
+使用 legacy-rules-to-ai-architecture 初始化当前项目的 AI 长期上下文。
+请自动生成 core profile，然后按模块分批抽取旧系统规则、架构约束、API 契约和前端一致性规则。
+最后自动运行上下文检查，并告诉我哪些地方还缺证据。
+```
+
+如果要做完整迁移/重构准备：
+
+```text
+使用 legacy-rules-to-ai-architecture 为当前旧项目生成 full profile。
+请自动初始化 AGENTS.md 和 docs/ai，上下文目录使用 docs/ai。
+然后先建立功能清单，再按页面、API、领域模块分批抽取规则，不要一次性全仓泛读。
+```
+
+## 手动 fallback
+
+正常情况下用户不需要执行下面命令。只有当 AI 客户端没有终端权限、Python 不可用、文件系统受限，或你想手动排查时，才需要直接运行脚本。
 
 在目标项目中创建默认 `core` 上下文：
 

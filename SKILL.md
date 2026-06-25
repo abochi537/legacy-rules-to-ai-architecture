@@ -1,6 +1,6 @@
 ---
 name: legacy-rules-to-ai-architecture
-description: Extract legacy rules into durable AI project context.
+description: Use whenever the user wants to analyze a legacy codebase, extract existing behavior rules, initialize AGENTS.md/docs/ai context, rebuild or migrate with stable architecture, or keep frontend pages consistent across AI coding sessions. Default to running the bundled scaffold/lint scripts yourself; do not make the user manually execute scripts unless tooling or permissions block execution.
 ---
 
 # Legacy Rules To AI Architecture
@@ -25,44 +25,71 @@ Build a durable project context that future agents must read before coding:
 Do not invent missing business rules. If evidence is missing, write `Unknown`
 and list what source would be needed.
 
+## User Experience Contract
+
+The user should be able to invoke this skill with one natural-language request.
+Do not require them to know script paths or copy/paste scaffold commands.
+
+When this skill is triggered for a concrete project:
+
+1. Resolve the target project root. If the user did not specify one, use the
+   current workspace root. Ask only when multiple plausible roots exist or the
+   target is unsafe.
+2. Resolve the AI docs directory. Default to `docs/ai`; use the user's preferred
+   path if they name one.
+3. Run `scripts/scaffold_ai_context.py` through the terminal tool yourself
+   unless the user explicitly requested read-only analysis or no file writes.
+4. After extracting or updating rules, run `scripts/lint_ai_context.py` yourself.
+5. Report what was created, what already existed, what still has placeholders,
+   and what evidence is missing.
+
+Only show manual commands when execution is blocked by missing Python, missing
+terminal access, filesystem permissions, or an explicit read-only request.
+
 ## Workflow
 
-1. Confirm the target project root, the AI docs directory, and the user's
+1. Resolve the target project root, the AI docs directory, and the user's
    preferred skills directory. Default AI docs to `docs/ai`. If the user does
    not want skills inside the repo, use their global or shared path.
-2. Inspect the repository structure narrowly before reading deeply. Prefer
+2. Run the scaffold script yourself to create the starter durable context
+   without overwriting existing files. Use `core` by default; use `full` when
+   the user explicitly asks for a migration/rebuild context or broad rule
+   extraction.
+3. Inspect the repository structure narrowly before reading deeply. Prefer
    CodeGraph if indexed; otherwise use fast file search and framework-specific
    entry points.
-3. Create a feature inventory before deep extraction: routes/pages, API
+4. Create a feature inventory before deep extraction: routes/pages, API
    endpoints, jobs, commands, domain modules, shared components, and tests.
    Pick a bounded slice for each pass; do not try to fully reverse-engineer a
    large repository in one turn.
-4. Identify the technical baseline: language, framework versions, routing,
+5. Identify the technical baseline: language, framework versions, routing,
    state management, API client, styling system, tests, build commands.
-5. Extract architecture rules from existing boundaries: modules, layers,
+6. Extract architecture rules from existing boundaries: modules, layers,
    dependency direction, shared packages, API conventions, and forbidden shortcuts.
-6. Extract domain rules by feature area. Every rule needs evidence: file path
+7. Extract domain rules by feature area. Every rule needs evidence: file path
    with line, symbol, route, schema, database field, fixture, log, screenshot,
    product doc, or test. Record confidence and last verified date.
-7. Extract frontend consistency rules: layout primitives, page patterns,
+8. Extract frontend consistency rules: layout primitives, page patterns,
    component library, design tokens, forms, tables, dialogs, loading/error/empty
    states, responsive behavior, canonical screenshots, breakpoint matrix, and
    visual-regression gaps.
-8. Separate canonical patterns from deprecated or conflicting patterns. If the
+9. Separate canonical patterns from deprecated or conflicting patterns. If the
    legacy codebase has multiple implementations, write a decision entry before
    turning one into a hard rule.
-9. Create `AGENTS.md` with no more than 100 lines. Keep it as a contract and
+10. Keep `AGENTS.md` at no more than 100 lines. Keep it as a contract and
    navigation file, not a full knowledge base. Existing files require explicit
    merge/diff review before editing.
-10. Create `<ai-docs-dir>/*` using the templates in
+11. Create or update `<ai-docs-dir>/*` using the templates in
     `references/context-templates.md`.
-11. Capture Git and release governance. If the user wants CSG-style Git
+12. Capture Git and release governance. If the user wants CSG-style Git
     governance, use `Links17/csg-git-skill` as the source of truth and write
     project-specific notes to `<ai-docs-dir>/git-workflow.md`.
-12. Recommend machine-checkable gates: typecheck, unit/integration tests,
+13. Recommend machine-checkable gates: typecheck, unit/integration tests,
    dependency checks, API contract tests, lint rules, AST rules, Storybook or
    visual regression.
-13. Only after stable patterns emerge, create optional workflow skills for
+14. Run the lint script yourself and fix or report any placeholders or missing
+    context files.
+15. Only after stable patterns emerge, create optional workflow skills for
     repeatable tasks such as `migrate-feature`, `add-api-endpoint`,
     `add-page`, or `preserve-frontend-consistency`.
 
@@ -81,10 +108,10 @@ If competing patterns were discovered, add or update an entry in `decisions.md`.
 Before handoff or PR, run the project's required checks from `AGENTS.md`, then
 record the date, command, and result in `context-health.md`.
 
-## Quick Scaffold
+## Automatic Scaffold
 
-To create the starter context files in a project without overwriting existing
-files, invoke through the `terminal` tool:
+Run the starter context scaffold yourself through the terminal tool. Do not ask
+the user to run this manually unless execution is blocked:
 
 ```bash
 python <skill-dir>/scripts/scaffold_ai_context.py --project <project-root>
